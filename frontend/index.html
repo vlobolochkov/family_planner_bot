@@ -31,6 +31,11 @@
       border-radius: 6px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+    #status {
+      margin-top: 15px;
+      color: #444;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -39,6 +44,7 @@
   <button onclick="addTask()">Добавить</button>
 
   <div id="task-list"></div>
+  <div id="status"></div>
 
   <script>
     const tg = window.Telegram.WebApp;
@@ -46,8 +52,14 @@
 
     const input = document.getElementById('task-input');
     const taskList = document.getElementById('task-list');
+    const statusEl = document.getElementById('status');
     let userId = null;
     let tasks = [];
+
+    function showStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.style.color = isError ? "crimson" : "green";
+    }
 
     async function fetchTasks() {
       try {
@@ -57,6 +69,7 @@
         renderTasks();
       } catch (err) {
         console.error("Ошибка при загрузке задач:", err);
+        showStatus("Ошибка при загрузке задач", true);
       }
     }
 
@@ -80,11 +93,13 @@
           tasks.push({ id: Date.now(), text });
           renderTasks();
           input.value = '';
+          showStatus("Задача добавлена");
         } else {
-          alert("Ошибка при добавлении задачи");
+          showStatus("Ошибка при добавлении", true);
         }
       } catch (err) {
         console.error("Ошибка при добавлении задачи:", err);
+        showStatus("Ошибка отправки запроса", true);
       }
     }
 
@@ -101,8 +116,16 @@
     // Инициализация
     window.addEventListener("DOMContentLoaded", () => {
       const initData = tg.initDataUnsafe;
-      userId = initData?.user?.id ? String(initData.user.id) : "test_user";
+      userId = initData?.user?.id ? String(initData.user.id) : null;
+
+      console.log("initData:", initData);
       console.log("user_id:", userId);
+
+      if (!userId) {
+        showStatus("❌ Не удалось получить user_id", true);
+        return;
+      }
+
       fetchTasks();
     });
   </script>
