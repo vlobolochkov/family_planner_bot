@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Task & Budget Planner</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #task-list {
+      margin-top: 20px;
+    }
+    .task-item {
+      background: white;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Задачи</h1>
+  <input type="text" id="task-input" placeholder="Введите задачу..." />
+  <button onclick="addTask()">Добавить</button>
+
+  <div id="task-list"></div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    const input = document.getElementById('task-input');
+    const taskList = document.getElementById('task-list');
+    let userId = null;
+    let tasks = [];
+
+    async function fetchTasks() {
+      try {
+        const res = await fetch(`https://family-planner-bot.onrender.com/tasks?user_id=${userId}`);
+        tasks = await res.json();
+        console.log("Загруженные задачи:", tasks);
+        renderTasks();
+      } catch (err) {
+        console.error("Ошибка при загрузке задач:", err);
+      }
+    }
+
+    async function addTask() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      console.log("Добавляется задача:", text);
+
+      try {
+        const res = await fetch("https://family-planner-bot.onrender.com/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId, text })
+        });
+
+        const data = await res.json();
+        console.log("Ответ от сервера:", data);
+
+        if (data.status === "ok") {
+          tasks.push({ id: Date.now(), text });
+          renderTasks();
+          input.value = '';
+        } else {
+          alert("Ошибка при добавлении задачи");
+        }
+      } catch (err) {
+        console.error("Ошибка при добавлении задачи:", err);
+      }
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      tasks.forEach((task, index) => {
+        const div = document.createElement('div');
+        div.className = 'task-item';
+        div.textContent = `${index + 1}. ${task.text || task}`;
+        taskList.appendChild(div);
+      });
+    }
+
+    // Инициализация
+    window.addEventListener("DOMContentLoaded", () => {
+      const initData = tg.initDataUnsafe;
+      userId = initData?.user?.id ? String(initData.user.id) : "test_user";
+      console.log("user_id:", userId);
+      fetchTasks();
+    });
+  </script>
+</body>
+</html>
