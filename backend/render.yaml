@@ -1,7 +1,7 @@
 services:
   - type: web
-    name: telegram-miniapp-api
+    name: family-planner-bot
     env: python
     buildCommand: ""
-    startCommand: "python server.py"
+    startCommand: "python backend/server.py"
     plan: free
