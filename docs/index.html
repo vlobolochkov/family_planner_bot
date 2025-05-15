@@ -36,6 +36,9 @@
       color: #444;
       font-size: 14px;
     }
+    .error {
+      color: crimson;
+    }
   </style>
 </head>
 <body>
@@ -53,20 +56,26 @@
     const input = document.getElementById('task-input');
     const taskList = document.getElementById('task-list');
     const statusEl = document.getElementById('status');
-    let userId = null;
     let tasks = [];
+
+    // Получаем user_id от Telegram
+    const initData = tg.initDataUnsafe;
+    let userId = initData?.user?.id ? String(initData.user.id) : "test"; // fallback для браузера
+
+    console.log("initDataUnsafe:", initData);
+    console.log("user_id:", userId);
 
     function showStatus(text, isError = false) {
       statusEl.textContent = text;
-      statusEl.style.color = isError ? "crimson" : "green";
+      statusEl.className = isError ? "error" : "";
     }
 
     async function fetchTasks() {
       try {
         const res = await fetch(`https://family-planner-bot.onrender.com/tasks?user_id=${userId}`);
         tasks = await res.json();
-        console.log("Загруженные задачи:", tasks);
         renderTasks();
+        showStatus("Задачи загружены");
       } catch (err) {
         console.error("Ошибка при загрузке задач:", err);
         showStatus("Ошибка при загрузке задач", true);
@@ -76,8 +85,6 @@
     async function addTask() {
       const text = input.value.trim();
       if (!text) return;
-
-      console.log("Добавляется задача:", text);
 
       try {
         const res = await fetch("https://family-planner-bot.onrender.com/tasks", {
@@ -98,8 +105,8 @@
           showStatus("Ошибка при добавлении", true);
         }
       } catch (err) {
-        console.error("Ошибка при добавлении задачи:", err);
-        showStatus("Ошибка отправки запроса", true);
+        console.error("Ошибка запроса:", err);
+        showStatus("Ошибка сети", true);
       }
     }
 
@@ -113,19 +120,9 @@
       });
     }
 
-    // Инициализация
+    // При загрузке
     window.addEventListener("DOMContentLoaded", () => {
-      const initData = tg.initDataUnsafe;
-      userId = initData?.user?.id ? String(initData.user.id) : null;
-
-      console.log("initData:", initData);
-      console.log("user_id:", userId);
-
-      if (!userId) {
-        showStatus("❌ Не удалось получить user_id", true);
-        return;
-      }
-
+      showStatus(`user_id: ${userId}`);
       fetchTasks();
     });
   </script>
