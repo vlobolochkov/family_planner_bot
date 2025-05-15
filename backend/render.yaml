@@ -2,6 +2,6 @@ services:
   - type: web
     name: family-planner-bot
     env: python
-    buildCommand: ""
+    buildCommand: "pip install -r backend/requirements.txt"
     startCommand: "python backend/server.py"
     plan: free
