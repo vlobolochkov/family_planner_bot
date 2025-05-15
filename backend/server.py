@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -54,4 +55,5 @@ def add_task():
 
 if __name__ == "__main__":
     init_db()
-    app.run(host="0.0.0.0", port=10000)  # Render использует порт из переменной окружения
+    port = int(os.environ.get("PORT", 5000))  # Используем порт Render или локальный по умолчанию
+    app.run(host="0.0.0.0", port=port)
